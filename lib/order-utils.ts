@@ -28,13 +28,13 @@ export function saveOrder(order: Order): void {
   const orders = getOrders()
   const updatedOrders = [...orders, order]
   localStorage.setItem('orders', JSON.stringify(updatedOrders))
-  
+
   // Dispatch event for same-tab listeners
   const event = new CustomEvent('newOrderPlaced', {
     detail: { order }
   })
   window.dispatchEvent(event)
-  
+
   // Force storage event for other tabs
   localStorage.setItem('orders', JSON.stringify(updatedOrders))
 }
@@ -57,13 +57,13 @@ export function updateOrderStatus(orderId: string, newStatus: string, order?: Or
     o.id === orderId ? { ...o, status: newStatus } : o
   )
   localStorage.setItem('orders', JSON.stringify(updatedOrders))
-  
+
   // Dispatch event for same-tab listeners
   const event = new CustomEvent('orderStatusUpdated', {
     detail: { orderId, newStatus, order }
   })
   window.dispatchEvent(event)
-  
+
   // Force storage event for other tabs
   localStorage.setItem('orders', JSON.stringify(updatedOrders))
 }
@@ -96,7 +96,7 @@ export function initOrderSync(callback: (updateType: string, data: any) => void)
 
   const handleStatusUpdate = (event: CustomEvent) => {
     callback('statusUpdate', event.detail)
-  }
+      }
 
   window.addEventListener('newOrderPlaced', handleNewOrder as EventListener)
   window.addEventListener('orderStatusUpdated', handleStatusUpdate as EventListener)

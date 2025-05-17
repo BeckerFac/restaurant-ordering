@@ -14,11 +14,17 @@ interface AuthGuardProps {
 export function AuthGuard({ children, type }: AuthGuardProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    // Verificar autenticación
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isClient) return
+    // Verificar autenticación SOLO en el cliente
     const checkAuth = () => {
       if (type === "admin") {
         const adminAuth = localStorage.getItem("adminAuthenticated") === "true"
@@ -51,10 +57,10 @@ export function AuthGuard({ children, type }: AuthGuardProps) {
     return () => {
       window.removeEventListener("restaurantDataUpdated", handleDataUpdate)
     }
-  }, [router, pathname, type])
+  }, [router, pathname, type, isClient])
 
   // Mostrar pantalla de carga mientras se verifica la autenticación
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-rose-600" />

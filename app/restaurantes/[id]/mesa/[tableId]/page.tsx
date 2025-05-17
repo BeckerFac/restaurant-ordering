@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
-import { ShoppingCart, ChevronLeft, Plus, Minus } from "lucide-react"
+import { ShoppingCart, ChevronLeft, Plus, Minus, Search, Filter } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { toast } from "@/components/ui/use-toast"
 import { saveOrder } from "@/lib/order-utils"
@@ -20,6 +22,7 @@ const sampleRestaurants = [
     description: "Cocina tradicional con un toque moderno",
     tables: 15,
     status: "active",
+    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
   },
   {
     id: "rest1002",
@@ -28,6 +31,7 @@ const sampleRestaurants = [
     description: "Especialidad en mariscos y pescados frescos",
     tables: 10,
     status: "active",
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80"
   },
   {
     id: "rest1003",
@@ -36,6 +40,7 @@ const sampleRestaurants = [
     description: "Alta cocina con ingredientes locales",
     tables: 20,
     status: "active",
+    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
   },
 ]
 
@@ -47,6 +52,7 @@ interface MenuItem {
   price: number
   category: string
   customizable: boolean
+  image: string
   options?: {
     name: string
     choices: { id: string; name: string; price: number }[]
@@ -91,6 +97,7 @@ const menuItems: MenuItem[] = [
     price: 25.0,
     category: "platos-principales",
     customizable: true,
+    image: "https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1469&q=80",
     options: [
       {
         name: "Término de la carne",
@@ -115,6 +122,7 @@ const menuItems: MenuItem[] = [
     price: 30.0,
     category: "entradas",
     customizable: true,
+    image: "https://images.unsplash.com/photo-1559847844-5315695dadae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1462&q=80",
     options: [
       {
         name: "Nivel de picante",
@@ -133,6 +141,7 @@ const menuItems: MenuItem[] = [
     price: 22.0,
     category: "platos-principales",
     customizable: false,
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1481&q=80"
   },
   {
     id: "4",
@@ -141,6 +150,7 @@ const menuItems: MenuItem[] = [
     price: 18.0,
     category: "entradas",
     customizable: true,
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1481&q=80",
     options: [
       {
         name: "Relleno",
@@ -158,6 +168,7 @@ const menuItems: MenuItem[] = [
     price: 8.0,
     category: "bebidas",
     customizable: false,
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1481&q=80"
   },
   {
     id: "6",
@@ -166,7 +177,14 @@ const menuItems: MenuItem[] = [
     price: 15.0,
     category: "bebidas",
     customizable: false,
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1481&q=80"
   },
+]
+
+const categories = [
+  { id: "entradas", name: "Entradas" },
+  { id: "platos-principales", name: "Platos Principales" },
+  { id: "bebidas", name: "Bebidas" },
 ]
 
 export default function TablePage() {
@@ -179,6 +197,8 @@ export default function TablePage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [customizations, setCustomizations] = useState<Record<string, string>>({})
   const [restaurant, setRestaurant] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
 
   useEffect(() => {
     if (!restaurantId || !tableId) {
@@ -198,40 +218,20 @@ export default function TablePage() {
     return null
   }
 
-  // Calcular el total del carrito
-  const cartTotal = cart.reduce((total, item) => total + item.totalPrice, 0)
-
-  // Agrupar elementos del menú por categoría
-  const categories = {
-    entradas: "Entradas",
-    "platos-principales": "Platos Principales",
-    bebidas: "Bebidas",
-  }
-
-  // Función para agregar un elemento al carrito
   const addToCart = (item: MenuItem) => {
     if (item.customizable) {
       setSelectedItem(item)
-      // Inicializar customizaciones con valores predeterminados
-      const initialCustomizations: Record<string, string> = {}
-      item.options?.forEach((option) => {
-        initialCustomizations[option.name] = option.choices[0].name
-      })
-      setCustomizations(initialCustomizations)
+      setCustomizations({})
     } else {
-      // Si no es personalizable, agregar directamente al carrito
-      const existingItemIndex = cart.findIndex(
-        (cartItem) => cartItem.menuItem.id === item.id && !cartItem.menuItem.customizable,
+      const existingItem = cart.find(
+        (cartItem) =>
+          cartItem.menuItem.id === item.id &&
+          Object.keys(cartItem.customizations).length === 0
       )
 
-      if (existingItemIndex >= 0) {
-        // Incrementar cantidad si ya existe
-        const newCart = [...cart]
-        newCart[existingItemIndex].quantity += 1
-        newCart[existingItemIndex].totalPrice = newCart[existingItemIndex].quantity * item.price
-        setCart(newCart)
+      if (existingItem) {
+        updateCartItemQuantity(cart.indexOf(existingItem), existingItem.quantity + 1)
       } else {
-        // Agregar nuevo item
         setCart([
           ...cart,
           {
@@ -245,314 +245,328 @@ export default function TablePage() {
     }
   }
 
-  // Función para confirmar la adición de un elemento personalizable
   const confirmCustomization = () => {
     if (!selectedItem) return
 
-    // Calcular precio adicional basado en las opciones seleccionadas
-    let additionalPrice = 0
-    const customizationDetails: Record<string, string> = {}
+    const existingItem = cart.find(
+      (cartItem) =>
+        cartItem.menuItem.id === selectedItem.id &&
+        JSON.stringify(cartItem.customizations) === JSON.stringify(customizations)
+    )
 
-    selectedItem.options?.forEach((option) => {
-      const selectedChoiceName = customizations[option.name]
-      const selectedChoice = option.choices.find((choice) => choice.name === selectedChoiceName)
+    if (existingItem) {
+      updateCartItemQuantity(cart.indexOf(existingItem), existingItem.quantity + 1)
+    } else {
+      setCart([
+        ...cart,
+        {
+          menuItem: selectedItem,
+          quantity: 1,
+          customizations,
+          totalPrice: calculateItemTotal({
+            menuItem: selectedItem,
+            quantity: 1,
+            customizations,
+            totalPrice: 0,
+          }),
+        },
+      ])
+    }
 
-      if (selectedChoice) {
-        additionalPrice += selectedChoice.price
-        customizationDetails[option.name] = selectedChoice.name
-      }
-    })
-
-    // Agregar al carrito con las personalizaciones
-    setCart([
-      ...cart,
-      {
-        menuItem: selectedItem,
-        quantity: 1,
-        customizations: customizationDetails,
-        totalPrice: selectedItem.price + additionalPrice,
-      },
-    ])
-
-    // Limpiar selección
     setSelectedItem(null)
     setCustomizations({})
   }
 
-  // Función para cancelar la personalización
   const cancelCustomization = () => {
     setSelectedItem(null)
     setCustomizations({})
   }
 
-  // Función para actualizar la cantidad de un elemento en el carrito
   const updateCartItemQuantity = (index: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      // Eliminar el elemento si la cantidad es 0 o menos
+    if (newQuantity < 1) {
       const newCart = [...cart]
       newCart.splice(index, 1)
       setCart(newCart)
-    } else {
-      // Actualizar la cantidad
-      const newCart = [...cart]
-      newCart[index].quantity = newQuantity
-      newCart[index].totalPrice = calculateItemTotal(newCart[index])
-      setCart(newCart)
+      return
     }
+
+    const newCart = [...cart]
+    newCart[index].quantity = newQuantity
+    newCart[index].totalPrice = calculateItemTotal(newCart[index])
+    setCart(newCart)
   }
 
-  // Calcular el total de un elemento del carrito
   const calculateItemTotal = (item: CartItem) => {
-    let basePrice = item.menuItem.price
+    let total = item.menuItem.price * item.quantity
 
-    // Agregar precios adicionales de personalizaciones
-    if (item.menuItem.customizable && item.menuItem.options) {
-      item.menuItem.options.forEach((option) => {
-        const choiceName = item.customizations[option.name]
-        const choice = option.choices.find((c) => c.name === choiceName)
-        if (choice) {
-          basePrice += choice.price
-        }
-      })
-    }
+    // Sumar el precio de las personalizaciones
+    Object.entries(item.customizations).forEach(([optionName, choiceId]) => {
+      const option = item.menuItem.options?.find((opt) => opt.name === optionName)
+      const choice = option?.choices.find((ch) => ch.id === choiceId)
+      if (choice) {
+        total += choice.price * item.quantity
+      }
+    })
 
-    return basePrice * item.quantity
+    return total
   }
 
   const handleSubmitOrder = async () => {
     if (cart.length === 0) {
       toast({
         title: "Carrito vacío",
-        description: "Agrega items a tu carrito antes de realizar el pedido",
+        description: "Agrega al menos un item al carrito para realizar el pedido.",
         variant: "destructive",
       })
       return
     }
 
+    const order: Order = {
+      id: Math.random().toString(36).substr(2, 9),
+      tableId,
+      restaurantId,
+      items: cart.map((item) => ({
+        menuItem: {
+          id: item.menuItem.id,
+          name: item.menuItem.name,
+          price: item.menuItem.price,
+        },
+        quantity: item.quantity,
+        customizations: item.customizations,
+        totalPrice: item.totalPrice,
+      })),
+      total: cart.reduce((sum, item) => sum + item.totalPrice, 0),
+      status: "pending",
+      timestamp: new Date().toISOString(),
+      paymentMethod: "cash",
+      paymentStatus: "pending",
+      orderNumber: Math.floor(1000 + Math.random() * 9000).toString(),
+    }
+
     try {
-      const orderId = `order${Math.floor(1000 + Math.random() * 9000)}`
-      const orderNumber = `P${Math.floor(100 + Math.random() * 900)}`
-      
-      const newOrder: Order = {
-        id: orderId,
-        tableId: tableId,
-        restaurantId: restaurantId,
-        items: cart.map(item => ({
-          menuItem: {
-            id: item.menuItem.id,
-            name: item.menuItem.name,
-            price: item.menuItem.price
-          },
-          quantity: item.quantity,
-          customizations: item.customizations,
-          totalPrice: item.totalPrice
-        })),
-        total: cart.reduce((sum: number, item: CartItem) => sum + item.totalPrice, 0),
-        status: "pending",
-        timestamp: new Date().toISOString(),
-        paymentMethod: "qr",
-        paymentStatus: "confirmed",
-        orderNumber: orderNumber
-      }
-
-      // Save the order and notify all tabs
-      saveOrder(newOrder)
-
-      // Clear the cart
-      setCart([])
-      
-      // Show success message
+      await saveOrder(order)
       toast({
-        title: "¡Pedido enviado!",
-        description: `Tu pedido #${orderNumber} ha sido enviado a la cocina`,
-        variant: "default",
+        title: "Pedido realizado",
+        description: "Tu pedido ha sido enviado a la cocina.",
       })
-
-      // Redirect to confirmation page
-      router.push(`/restaurantes/${restaurantId}/mesa/${tableId}/confirmacion?orderId=${orderId}`)
+      router.push(`/restaurantes/${restaurantId}/mesa/${tableId}/confirmacion`)
     } catch (error) {
-      console.error('Error al enviar el pedido:', error)
       toast({
         title: "Error",
-        description: "Hubo un problema al enviar tu pedido. Por favor, intenta nuevamente.",
+        description: "Hubo un error al procesar tu pedido. Por favor, intenta nuevamente.",
         variant: "destructive",
       })
     }
   }
 
+  const filteredMenuItems = menuItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="flex items-center mb-6">
-        <Link href={`/restaurantes/${restaurantId}`} className="mr-4">
-          <Button variant="outline" size="icon">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">
-            {restaurant.name} - Mesa {tableId}
-          </h1>
-          <p className="text-muted-foreground">Menú Digital</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto py-10">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <Link href={`/restaurantes/${restaurantId}`} className="mr-4">
+              <Button variant="outline" size="icon">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold">{restaurant.name}</h1>
+              <p className="text-muted-foreground">Mesa {tableId}</p>
+            </div>
+          </div>
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="relative"
+              onClick={() => document.getElementById("cart")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              <span className="font-medium">{cart.length} items</span>
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar en el menú..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Menu Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {filteredMenuItems.map((item) => (
+            <Card key={item.id} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 px-3 py-1 rounded-full">
+                  <span className="font-medium">S/ {item.price.toFixed(2)}</span>
+                </div>
+              </div>
+              <CardHeader>
+                <CardTitle>{item.name}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button
+                  className="w-full bg-rose-600 hover:bg-rose-700"
+                  onClick={() => addToCart(item)}
+                >
+                  Agregar al Carrito
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+
+        {/* Cart Section */}
+        <div id="cart" className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-6">Tu Pedido</h2>
+          {cart.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              Tu carrito está vacío. Agrega algunos items del menú.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-4 mb-6">
+                {cart.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <div className="flex-1">
+                      <h3 className="font-medium">{item.menuItem.name}</h3>
+                      {Object.entries(item.customizations).map(([optionName, choiceId]) => {
+                        const option = item.menuItem.options?.find((opt) => opt.name === optionName)
+                        const choice = option?.choices.find((ch) => ch.id === choiceId)
+                        return (
+                          <p key={optionName} className="text-sm text-muted-foreground">
+                            {optionName}: {choice?.name}
+                          </p>
+                        )
+                      })}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateCartItemQuantity(index, item.quantity - 1)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateCartItemQuantity(index, item.quantity + 1)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <span className="font-medium">S/ {item.totalPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between border-t pt-4">
+                <span className="text-lg font-bold">Total</span>
+                <span className="text-lg font-bold">
+                  S/ {cart.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)}
+                </span>
+              </div>
+              <Button
+                className="w-full mt-6 bg-rose-600 hover:bg-rose-700"
+                onClick={handleSubmitOrder}
+              >
+                Realizar Pedido
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {selectedItem ? (
-        // Vista de personalización
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Personalizar: {selectedItem.name}</CardTitle>
-            <CardDescription>Selecciona tus preferencias</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {selectedItem.options?.map((option) => (
-              <div key={option.name} className="space-y-2">
-                <Label>{option.name}</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {option.choices.map((choice) => (
-                    <div key={choice.id} className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id={choice.id}
-                        name={option.name}
-                        value={choice.id}
-                        checked={customizations[option.name] === choice.id}
-                        onChange={() =>
-                          setCustomizations({
-                            ...customizations,
-                            [option.name]: choice.id,
-                          })
-                        }
-                        className="h-4 w-4 text-rose-600"
-                      />
-                      <Label htmlFor={choice.id} className="flex-1">
-                        {choice.name}
-                        {choice.price > 0 && (
-                          <span className="text-rose-600 ml-1">(+S/ {choice.price.toFixed(2)})</span>
-                        )}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={cancelCustomization}>
-              Cancelar
-            </Button>
-            <Button className="bg-rose-600 hover:bg-rose-700" onClick={confirmCustomization}>
-              Agregar al Pedido
-            </Button>
-          </CardFooter>
-        </Card>
-      ) : (
-        // Vista normal del menú
-        <Tabs defaultValue="entradas" className="mb-6">
-          <TabsList className="mb-4">
-            {Object.entries(categories).map(([key, label]) => (
-              <TabsTrigger key={key} value={key}>
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {Object.keys(categories).map((category) => (
-            <TabsContent key={category} value={category} className="space-y-4">
-              {menuItems
-                .filter((item) => item.category === category)
-                .map((item) => (
-                  <Card key={item.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{item.name}</CardTitle>
-                          <CardDescription>{item.description}</CardDescription>
-                        </div>
-                        <div className="text-lg font-bold">S/ {item.price.toFixed(2)}</div>
-                      </div>
-                    </CardHeader>
-                    <CardFooter>
-                      <Button className="w-full bg-rose-600 hover:bg-rose-700" onClick={() => addToCart(item)}>
-                        Agregar al Pedido
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-            </TabsContent>
-          ))}
-        </Tabs>
-      )}
-
-      {/* Carrito de compras */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Tu Pedido
-          </CardTitle>
-          <CardDescription>
-            {restaurant.name} - Mesa {tableId}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {cart.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">Tu carrito está vacío</p>
-          ) : (
-            <div className="space-y-4">
-              {cart.map((item, index) => (
-                <div key={index} className="flex justify-between items-start border-b pb-4">
-                  <div className="flex-1">
-                    <div className="font-medium">{item.menuItem.name}</div>
-                    {Object.entries(item.customizations).length > 0 && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {Object.entries(item.customizations).map(([key, value]) => (
-                          <div key={key}>
-                            {key}: {value}
-                          </div>
+      {/* Customization Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Personalizar {selectedItem.name}</CardTitle>
+              <CardDescription>Selecciona tus preferencias</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {selectedItem.options?.map((option) => (
+                  <div key={option.name}>
+                    <Label>{option.name}</Label>
+                    <Select
+                      value={customizations[option.name] || ""}
+                      onValueChange={(value) =>
+                        setCustomizations({ ...customizations, [option.name]: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Selecciona ${option.name.toLowerCase()}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {option.choices.map((choice) => (
+                          <SelectItem key={choice.id} value={choice.id}>
+                            {choice.name}
+                            {choice.price > 0 && ` (+S/ ${choice.price.toFixed(2)})`}
+                          </SelectItem>
                         ))}
-                      </div>
-                    )}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateCartItemQuantity(index, item.quantity - 1)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="w-8 text-center">{item.quantity}</span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateCartItemQuantity(index, item.quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <div className="w-20 text-right font-medium">S/ {item.totalPrice.toFixed(2)}</div>
-                  </div>
-                </div>
-              ))}
-
-              <div className="flex justify-between items-center pt-4 font-bold text-lg">
-                <div>Total:</div>
-                <div>S/ {cartTotal.toFixed(2)}</div>
+                ))}
               </div>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button
-            className="w-full bg-rose-600 hover:bg-rose-700"
-            disabled={cart.length === 0}
-            onClick={handleSubmitOrder}
-          >
-            Proceder al Pago
-          </Button>
-        </CardFooter>
-      </Card>
+            </CardContent>
+            <CardFooter className="flex gap-4">
+              <Button variant="outline" className="flex-1" onClick={cancelCustomization}>
+                Cancelar
+              </Button>
+              <Button className="flex-1 bg-rose-600 hover:bg-rose-700" onClick={confirmCustomization}>
+                Agregar al Carrito
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
