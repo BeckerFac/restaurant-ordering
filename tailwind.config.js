@@ -4,7 +4,6 @@ module.exports = {
     content: [
       "./app/**/*.{js,ts,jsx,tsx,mdx}",
       "./components/**/*.{js,ts,jsx,tsx,mdx}",
-      "./pages/**/*.{js,ts,jsx,tsx,mdx}",
       "./styles/**/*.{js,ts,jsx,tsx,mdx}"
     ],
   theme: {
@@ -91,4 +90,5 @@ module.exports = {
   	}
   },
   plugins: [require("tailwindcss-animate")],
+  safelist: require('fs').readFileSync('tailwind.safelist.txt', 'utf-8').split('\n').filter(Boolean),
 };
