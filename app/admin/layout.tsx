@@ -2,6 +2,7 @@ import type React from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { MainNav } from "@/components/main-nav"
 import { AuthGuard } from "@/components/auth-guard"
+import '../../styles/globals.css'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
