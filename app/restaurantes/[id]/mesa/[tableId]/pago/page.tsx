@@ -12,7 +12,7 @@ import { ChevronLeft, CreditCard, Banknote, QrCode } from "lucide-react"
 import Link from "next/link"
 
 // Add import for order utilities
-import { saveOrder, generateOrderNumber } from "@/lib/order-utils"
+import { saveOrder, generateOrderNumber, type Order } from "@/lib/order-utils"
 
 // Datos de ejemplo para restaurantes
 const sampleRestaurants = [
@@ -98,7 +98,7 @@ export default function PaymentPage({ params }: { params: { id: string; tableId:
     const orderNumber = generateOrderNumber()
 
     // Crear el objeto de pedido
-    const orderData = {
+    const orderData: Order = {
       id: `order-${Date.now()}`,
       restaurantId,
       tableId,
